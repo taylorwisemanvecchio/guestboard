@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:padding="48dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textColor="#0096a6"
+        android:textSize="48sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pairing_title"
+        android:textColor="#ffffff"
+        android:textSize="28sp"
+        android:layout_marginBottom="8dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/pairing_instructions"
+        android:textColor="#aaaaaa"
+        android:textSize="18sp"
+        android:layout_marginBottom="32dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="24dp">
+
+        <EditText
+            android:id="@+id/code_1"
+            android:layout_width="64dp"
+            android:layout_height="72dp"
+            android:background="#2a2a3e"
+            android:gravity="center"
+            android:inputType="textCapCharacters"
+            android:maxLength="1"
+            android:textColor="#ffffff"
+            android:textSize="32sp"
+            android:layout_marginEnd="8dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+        <EditText
+            android:id="@+id/code_2"
+            android:layout_width="64dp"
+            android:layout_height="72dp"
+            android:background="#2a2a3e"
+            android:gravity="center"
+            android:inputType="textCapCharacters"
+            android:maxLength="1"
+            android:textColor="#ffffff"
+            android:textSize="32sp"
+            android:layout_marginEnd="8dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+        <EditText
+            android:id="@+id/code_3"
+            android:layout_width="64dp"
+            android:layout_height="72dp"
+            android:background="#2a2a3e"
+            android:gravity="center"
+            android:inputType="textCapCharacters"
+            android:maxLength="1"
+            android:textColor="#ffffff"
+            android:textSize="32sp"
+            android:layout_marginEnd="16dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+        <EditText
+            android:id="@+id/code_4"
+            android:layout_width="64dp"
+            android:layout_height="72dp"
+            android:background="#2a2a3e"
+            android:gravity="center"
+            android:inputType="textCapCharacters"
+            android:maxLength="1"
+            android:textColor="#ffffff"
+            android:textSize="32sp"
+            android:layout_marginEnd="8dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+        <EditText
+            android:id="@+id/code_5"
+            android:layout_width="64dp"
+            android:layout_height="72dp"
+            android:background="#2a2a3e"
+            android:gravity="center"
+            android:inputType="textCapCharacters"
+            android:maxLength="1"
+            android:textColor="#ffffff"
+            android:textSize="32sp"
+            android:layout_marginEnd="8dp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+        <EditText
+            android:id="@+id/code_6"
+            android:layout_width="64dp"
+            android:layout_height="72dp"
+            android:background="#2a2a3e"
+            android:gravity="center"
+            android:inputType="textCapCharacters"
+            android:maxLength="1"
+            android:textColor="#ffffff"
+            android:textSize="32sp"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/pair_button"
+        android:layout_width="240dp"
+        android:layout_height="56dp"
+        android:text="@string/pairing_button"
+        android:textSize="20sp"
+        android:backgroundTint="#0096a6"
+        android:textColor="#ffffff"
+        android:focusable="true"
+        android:layout_marginBottom="16dp" />
+
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/status_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#ff6b6b"
+        android:textSize="18sp" />
+
+</LinearLayout>

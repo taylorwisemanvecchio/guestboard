@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">Guestboard</string>
+    <string name="pairing_title">Pair Your Device</string>
+    <string name="pairing_instructions">Enter the 6-character code from the web app</string>
+    <string name="pairing_button">Pair</string>
+    <string name="welcome_no_guest">Welcome</string>
+    <string name="loading">Loading…</string>
+    <string name="recommendations_title">Nearby</string>
+    <string name="weather_temp">%1$d°F</string>
+    <string name="wifi_display">WiFi: %1$s  •  %2$s</string>
+    <string name="checkin_display">Check-in: %1$s</string>
+    <string name="checkout_display">Checkout: %1$s</string>
+    <string name="tab_welcome">Welcome</string>
+    <string name="tab_info">Info</string>
+    <string name="tab_nearby">Nearby</string>
+    <string name="tab_apps">Apps</string>
+    <string name="host_label">Your Host</string>
+    <string name="phone_label">Phone</string>
+    <string name="email_label">Email</string>
+    <string name="wifi_network_label">WiFi Network</string>
+    <string name="wifi_password_label">Password</string>
+    <string name="not_installed">Not Installed</string>
+    <string name="no_recommendations">No recommendations yet</string>
+</resources>

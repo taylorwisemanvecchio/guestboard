@@ -1,0 +1,159 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               String     @id @default(cuid())
+  email            String     @unique
+  hashedPassword   String
+  name             String
+  stripeCustomerId String?    @unique
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+  properties       Property[]
+}
+
+model Property {
+  id                   String             @id @default(cuid())
+  userId               String
+  name                 String
+  address              String             @default("")
+  city                 String             @default("")
+  state                String             @default("")
+  zip                  String             @default("")
+  country              String             @default("")
+  timezone             String             @default("America/New_York")
+  latitude             Float?
+  longitude            Float?
+  photoUrl             String?
+  wifiName             String?
+  wifiPassword         String?
+  checkoutInstructions String?
+  houseRules           String?
+  hostName             String?
+  hostPhone            String?
+  hostEmail            String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stays                Stay[]
+  devices              Device[]
+  pairingCodes         PairingCode[]
+  recommendations      Recommendation[]
+  settings             PropertySettings?
+  subscription         Subscription?
+
+  @@index([userId])
+}
+
+model Stay {
+  id                      String    @id @default(cuid())
+  propertyId              String
+  guestName               String
+  checkIn                 DateTime
+  checkOut                DateTime
+  welcomeNote             String?
+  occasion                String?
+  tags                    Json?
+  customRecommendations   Json?
+  status                  String    @default("upcoming") // upcoming, active, completed, cancelled
+  source                  String    @default("manual")   // manual, hostaway, guesty, hospitable, ownerrez
+  externalReservationId   String?
+  rawSourceData           Json?
+  lastSyncedAt            DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  property                Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([propertyId, checkIn, checkOut])
+}
+
+model Device {
+  id          String   @id @default(cuid())
+  propertyId  String
+  name        String   @default("TV")
+  deviceToken String   @unique @default(cuid())
+  lastSeen    DateTime @default(now())
+  status      String   @default("active") // active, revoked
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+  @@index([deviceToken])
+}
+
+model PairingCode {
+  id         String   @id @default(cuid())
+  propertyId String
+  code       String   @unique
+  expiresAt  DateTime
+  used       Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([propertyId])
+}
+
+model Recommendation {
+  id          String   @id @default(cuid())
+  propertyId  String
+  name        String
+  category    String   // restaurant, bar, coffee, park, things_to_do, shopping
+  address     String   @default("")
+  description String   @default("")
+  hidden      Boolean  @default(false)
+  custom      Boolean  @default(false)
+  sortOrder   Int      @default(0)
+  placeId     String?  // Google Places ID
+  photoUrl    String?  // Stored photo URL
+  rating      Float?   // Google rating (1-5)
+  latitude    Float?
+  longitude   Float?
+  hostNote    String?  // Optional host note
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model PropertySettings {
+  id                  String   @id @default(cuid())
+  propertyId          String   @unique
+  welcomeTemplate     String   @default("Welcome, {{guestName}}!")
+  showWeather         Boolean  @default(true)
+  showRecommendations Boolean  @default(true)
+  showWifi            Boolean  @default(true)
+  showCheckout        Boolean  @default(true)
+  accentColor         String   @default("#0096a6")
+  theme               String   @default("dark") // dark, light
+  backgroundImageUrl  String?
+  logoUrl             String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  property            Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Subscription {
+  id                    String   @id @default(cuid())
+  propertyId            String   @unique
+  stripeSubscriptionId  String   @unique
+  stripePriceId         String
+  plan                  String   // "tv" | "tv_pro"
+  status                String   // "active" | "past_due" | "canceled" | "unpaid"
+  deviceLimit           Int
+  currentPeriodEnd      DateTime
+  cancelAtPeriodEnd     Boolean  @default(false)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  property              Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}

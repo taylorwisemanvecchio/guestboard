@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="background_dark">#0a0a1a</color>
+    <color name="surface_dark">#1a1a2e</color>
+    <color name="accent">#0096a6</color>
+    <color name="text_primary">#ffffff</color>
+    <color name="text_secondary">#aaaaaa</color>
+    <color name="error">#ff6b6b</color>
+    <color name="default_background">#FF111111</color>
+    <color name="frosted_card_bg">#CC1a1a2e</color>
+    <color name="nav_bar_bg">#E6111122</color>
+    <color name="nav_selected_bg">#44ffffff</color>
+    <color name="text_muted">#80ffffff</color>
+    <color name="divider">#33ffffff</color>
+</resources>
