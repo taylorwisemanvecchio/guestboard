@@ -15,9 +15,19 @@ android {
         versionName = "1.0"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../guestboard-release.keystore")
+            storePassword = "guestboard123"
+            keyAlias = "guestboard"
+            keyPassword = "guestboard123"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

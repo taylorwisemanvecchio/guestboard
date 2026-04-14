@@ -40,6 +40,10 @@ export default function DevicesPage() {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renamingValue, setRenamingValue] = useState("");
 
+  // Wipe state
+  const [wiping, setWiping] = useState(false);
+  const [wipeResult, setWipeResult] = useState("");
+
   const fetchDevices = useCallback(async () => {
     try {
       const [devicesRes, billingRes] = await Promise.all([
@@ -85,6 +89,26 @@ export default function DevicesPage() {
 
     return () => clearInterval(interval);
   }, [pairingExpiry]);
+
+  async function handleWipeCredentials() {
+    if (!confirm("This will sign out all streaming apps (Netflix, Hulu, etc.) on all paired devices. Continue?")) return;
+    setWiping(true);
+    setWipeResult("");
+    try {
+      const res = await fetch(`/api/properties/${propertyId}/wipe`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setWipeResult(`Wipe command sent to ${data.devicesAffected} device(s). It will complete within 30 seconds.`);
+        setTimeout(() => setWipeResult(""), 10000);
+      } else {
+        setWipeResult("Failed to send wipe command.");
+      }
+    } catch {
+      setWipeResult("Failed to send wipe command.");
+    } finally {
+      setWiping(false);
+    }
+  }
 
   async function handleGenerateCode() {
     setGeneratingCode(true);
@@ -199,6 +223,27 @@ export default function DevicesPage() {
           </button>
         )}
       </div>
+
+      {/* Wipe Credentials */}
+      {devices.filter(d => d.status === "active").length > 0 && (
+        <div className="mb-6 flex items-center gap-3">
+          <button
+            onClick={handleWipeCredentials}
+            disabled={wiping}
+            className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 hover:bg-red-100 disabled:opacity-50 transition"
+          >
+            {wiping ? "Sending wipe..." : "Wipe Streaming Credentials"}
+          </button>
+          <span className="text-xs text-gray-500">
+            Signs out Netflix, Hulu, Disney+, and other streaming apps on all paired devices
+          </span>
+        </div>
+      )}
+      {wipeResult && (
+        <div className="mb-6 rounded-lg bg-green-50 border border-green-200 p-3 text-sm text-green-800">
+          {wipeResult}
+        </div>
+      )}
 
       {/* Pairing Code Modal */}
       {showPairingModal && (

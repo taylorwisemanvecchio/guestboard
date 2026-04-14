@@ -21,4 +21,7 @@
     <string name="wifi_password_label">Password</string>
     <string name="not_installed">Not Installed</string>
     <string name="no_recommendations">No recommendations yet</string>
+    <string name="loading_guestboard">Welcome!</string>
+    <string name="loading_hint">Getting things ready for your stay…</string>
+    <string name="accessibility_description">Guestboard uses this service to map the Home button back to the guest welcome screen.</string>
 </resources>

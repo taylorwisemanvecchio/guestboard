@@ -44,7 +44,10 @@
       "Bash(npm list:*)",
       "Bash(node -e \"const bcrypt = require\\('bcryptjs'\\); bcrypt.hash\\('password123', 12\\).then\\(h => console.log\\(h\\)\\);\")",
       "Bash(npx prisma@5.22.0 generate)",
-      "Bash(npx -p typescript tsc --noEmit)"
+      "Bash(npx -p typescript tsc --noEmit)",
+      "Bash(node -e ':*)",
+      "Read(//c/Users/vecchioj/Desktop/**)",
+      "Read(//c/Users/VecchioJ/Desktop/**)"
     ]
   }
 }

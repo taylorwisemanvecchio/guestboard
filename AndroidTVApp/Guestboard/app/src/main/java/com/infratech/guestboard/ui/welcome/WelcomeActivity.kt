@@ -25,6 +25,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.infratech.guestboard.R
+import com.infratech.guestboard.admin.GuestboardDeviceAdmin
 import com.infratech.guestboard.data.model.DisplayPayload
 import com.infratech.guestboard.ui.pairing.PairingActivity
 import kotlinx.coroutines.launch
@@ -35,7 +36,9 @@ class WelcomeActivity : FragmentActivity() {
     private lateinit var backgroundDim: View
     private lateinit var mainContent: View
     private lateinit var loadingView: View
-    private lateinit var errorView: TextView
+    private lateinit var loadingSpinner: View
+    private lateinit var loadingText: TextView
+    private lateinit var loadingSubtext: TextView
     private lateinit var bottomNav: LinearLayout
 
     private lateinit var logoImage: ImageView
@@ -46,10 +49,17 @@ class WelcomeActivity : FragmentActivity() {
     private val dateFormat = SimpleDateFormat("EEEE, MMMM d", Locale.US)
     private val timeFormat = SimpleDateFormat("h:mm a", Locale.US)
 
-    private var currentTabIndex = 0
+    private var currentTabIndex = -1 // -1 = no tab shown yet
     private val navItems = mutableListOf<View>()
     private var dataLoaded = false
     private var accentColor: Int? = null
+
+    // Cache fragments so we don't recreate them every switch
+    private val fragmentCache = mutableMapOf<Int, Fragment>()
+
+    // Debounce tab switching
+    private var lastTabSwitchTime = 0L
+    private val TAB_SWITCH_DEBOUNCE_MS = 200L
 
     data class TabInfo(val label: String, val iconRes: Int, val fragmentFactory: () -> Fragment)
 
@@ -67,11 +77,18 @@ class WelcomeActivity : FragmentActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_welcome)
 
+        // Start lock task mode — Home button becomes no-op, streaming apps still work
+        if (GuestboardDeviceAdmin.isDeviceOwner(this)) {
+            GuestboardDeviceAdmin.startLockTask(this)
+        }
+
         backgroundImage = findViewById(R.id.background_image)
         backgroundDim = findViewById(R.id.background_dim)
         mainContent = findViewById(R.id.main_content)
         loadingView = findViewById(R.id.loading_view)
-        errorView = findViewById(R.id.error_view)
+        loadingSpinner = findViewById(R.id.loading_spinner)
+        loadingText = findViewById(R.id.loading_text)
+        loadingSubtext = findViewById(R.id.loading_subtext)
         bottomNav = findViewById(R.id.bottom_nav)
         logoImage = findViewById(R.id.logo_image)
         clockOverlay = findViewById(R.id.clock_overlay)
@@ -89,12 +106,13 @@ class WelcomeActivity : FragmentActivity() {
                     when (state) {
                         is DisplayUiState.Loading -> {
                             loadingView.visibility = View.VISIBLE
+                            loadingSpinner.visibility = View.VISIBLE
+                            loadingText.text = getString(R.string.loading_guestboard)
+                            loadingSubtext.text = getString(R.string.loading_hint)
                             mainContent.visibility = View.GONE
-                            errorView.visibility = View.GONE
                         }
                         is DisplayUiState.Loaded -> {
                             loadingView.visibility = View.GONE
-                            errorView.visibility = View.GONE
                             mainContent.visibility = View.VISIBLE
                             clockOverlay.visibility = View.VISIBLE
                             try {
@@ -102,7 +120,7 @@ class WelcomeActivity : FragmentActivity() {
                             } catch (_: Exception) { }
                             if (!dataLoaded) {
                                 dataLoaded = true
-                                switchTab(0)
+                                switchTab(0, force = true)
                             } else {
                                 updateNavSelection(currentTabIndex)
                             }
@@ -110,10 +128,11 @@ class WelcomeActivity : FragmentActivity() {
                         }
                         is DisplayUiState.Error -> {
                             if (!dataLoaded) {
-                                loadingView.visibility = View.GONE
+                                loadingView.visibility = View.VISIBLE
+                                loadingSpinner.visibility = View.GONE
+                                loadingText.text = getString(R.string.loading_guestboard)
+                                loadingSubtext.text = getString(R.string.loading_hint)
                                 mainContent.visibility = View.GONE
-                                errorView.visibility = View.VISIBLE
-                                errorView.text = state.message
                             }
                         }
                         is DisplayUiState.Unpaired -> {
@@ -133,36 +152,58 @@ class WelcomeActivity : FragmentActivity() {
             item.findViewById<ImageView>(R.id.nav_icon).setImageResource(tab.iconRes)
             item.findViewById<TextView>(R.id.nav_label).text = tab.label
 
-            item.setOnClickListener { switchTab(index) }
-            item.setOnKeyListener { _, keyCode, event ->
-                if (event.action != KeyEvent.ACTION_DOWN) return@setOnKeyListener false
-                when (keyCode) {
-                    KeyEvent.KEYCODE_DPAD_LEFT -> {
-                        if (index > 0) switchTab(index - 1).also { navItems[index - 1].requestFocus() }
-                        true
-                    }
-                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                        if (index < tabs.size - 1) switchTab(index + 1).also { navItems[index + 1].requestFocus() }
-                        true
-                    }
-                    KeyEvent.KEYCODE_DPAD_UP -> {
-                        findViewById<View>(R.id.tab_container)?.requestFocus()
-                        true
-                    }
-                    else -> false
+            // Switch tab when nav item gains focus (natural D-pad left/right)
+            item.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus) {
+                    switchTab(index)
                 }
             }
+
+            // Select/click also switches
+            item.setOnClickListener { switchTab(index) }
 
             bottomNav.addView(item)
             navItems.add(item)
         }
+
+        // Set initial focus to first nav item after layout
+        bottomNav.post {
+            navItems.firstOrNull()?.requestFocus()
+        }
     }
 
-    fun switchTab(index: Int) {
+    fun switchTab(index: Int, force: Boolean = false) {
+        // Debounce rapid presses
+        val now = System.currentTimeMillis()
+        if (!force && now - lastTabSwitchTime < TAB_SWITCH_DEBOUNCE_MS) return
+        if (!force && index == currentTabIndex) return
+        lastTabSwitchTime = now
+
         currentTabIndex = index
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.tab_container, tabs[index].fragmentFactory())
-            .commit()
+
+        // Get or create cached fragment
+        val fragment = fragmentCache.getOrPut(index) {
+            tabs[index].fragmentFactory()
+        }
+
+        // Use show/hide instead of replace to preserve fragment state
+        val transaction = supportFragmentManager.beginTransaction()
+
+        // Hide all fragments
+        for ((idx, frag) in fragmentCache) {
+            if (frag.isAdded) {
+                transaction.hide(frag)
+            }
+        }
+
+        // Show or add the target fragment
+        if (fragment.isAdded) {
+            transaction.show(fragment)
+        } else {
+            transaction.add(R.id.tab_container, fragment, "tab_$index")
+        }
+
+        transaction.commitNowAllowingStateLoss()
         updateNavSelection(index)
     }
 
@@ -192,7 +233,6 @@ class WelcomeActivity : FragmentActivity() {
             Glide.with(this).load(payload.property.photoUrl).centerCrop().into(backgroundImage)
         }
 
-        // Logo
         val logoUrl = payload.settings.logoUrl
         if (!logoUrl.isNullOrBlank()) {
             logoImage.visibility = View.VISIBLE
@@ -207,12 +247,52 @@ class WelcomeActivity : FragmentActivity() {
             val now = Date()
             clockDate.text = dateFormat.format(now)
             clockTime.text = timeFormat.format(now)
-            clockHandler.postDelayed(this, 15_000) // update every 15 seconds
+            clockHandler.postDelayed(this, 15_000)
         }
     }
 
     private fun startClock() {
         clockRunnable.run()
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            val focused = currentFocus
+            // If nothing has focus, or focus is on something outside our nav/content,
+            // force it back to the current nav item
+            if (focused == null) {
+                if (currentTabIndex >= 0 && currentTabIndex < navItems.size) {
+                    navItems[currentTabIndex].requestFocus()
+                    return true
+                }
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        forceNavFocus()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        forceNavFocus()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            forceNavFocus()
+        }
+    }
+
+    private fun forceNavFocus() {
+        if (currentTabIndex >= 0 && currentTabIndex < navItems.size) {
+            bottomNav.postDelayed({
+                navItems[currentTabIndex].requestFocus()
+            }, 150)
+        }
     }
 
     override fun onDestroy() {

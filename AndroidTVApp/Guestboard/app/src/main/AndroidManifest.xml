@@ -2,6 +2,42 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+
+    <!-- Declare packages we need to query for the Apps tab -->
+    <queries>
+        <package android:name="com.netflix.ninja" />
+        <package android:name="com.netflix.mediaclient" />
+        <package android:name="com.google.android.youtube.tv" />
+        <package android:name="com.google.android.youtube" />
+        <package android:name="com.hulu.livingroomplus" />
+        <package android:name="com.hulu.plus" />
+        <package android:name="com.disney.disneyplus" />
+        <package android:name="com.amazon.amazonvideo.livingroom" />
+        <package android:name="com.amazon.avod" />
+        <package android:name="com.hbo.hbomax" />
+        <package android:name="com.wbd.stream" />
+        <package android:name="com.tubitv" />
+        <package android:name="com.peacocktv.peacockandroid" />
+        <package android:name="com.apple.atve.androidtv.appletv" />
+        <package android:name="com.apple.atve.amazon.appletv" />
+        <package android:name="com.spotify.tv.android" />
+        <package android:name="com.spotify.music" />
+        <package android:name="com.cbs.ott" />
+        <package android:name="com.cbs.app" />
+        <package android:name="tv.pluto.android" />
+        <package android:name="com.instagram.airwave" />
+        <package android:name="com.xfinity.cloudtvr.tenfoot" />
+        <package android:name="com.gotv.nflgamecenter.us.lite" />
+        <package android:name="com.plexapp.android" />
+        <package android:name="com.movieboxpro.androidtv" />
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+        </intent>
+    </queries>
 
     <uses-feature
         android:name="android.hardware.touchscreen"
@@ -18,9 +54,12 @@
         android:supportsRtl="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.Guestboard">
+
+        <!-- Main entry point -->
         <activity
             android:name=".SplashActivity"
             android:exported="true"
+            android:launchMode="singleTask"
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -32,14 +71,61 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.pairing.PairingActivity"
             android:exported="false"
             android:screenOrientation="landscape" />
+
         <activity
             android:name=".ui.welcome.WelcomeActivity"
             android:exported="false"
+            android:launchMode="singleTask"
             android:screenOrientation="landscape" />
+
+        <!-- Device Admin Receiver (for Device Owner mode) -->
+        <receiver
+            android:name=".admin.GuestboardDeviceAdmin"
+            android:exported="true"
+            android:permission="android.permission.BIND_DEVICE_ADMIN">
+            <meta-data
+                android:name="android.app.device_admin"
+                android:resource="@xml/device_admin_policies" />
+            <intent-filter>
+                <action android:name="android.app.action.DEVICE_ADMIN_ENABLED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Boot receiver -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter android:priority="999">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Background service for polling device commands (wipe, etc.) -->
+        <service
+            android:name=".service.DeviceCommandService"
+            android:exported="false" />
+
+        <!-- Accessibility service for Home button interception -->
+        <service
+            android:name=".service.HomeButtonService"
+            android:exported="true"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
     </application>
 
 </manifest>

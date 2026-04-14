@@ -37,6 +37,7 @@ const ACCENT_COLORS = [
   { value: "#16a34a", label: "Green" },
   { value: "#ca8a04", label: "Gold" },
   { value: "#475569", label: "Slate" },
+  { value: "#ffffff", label: "White" },
 ];
 
 export default function SettingsPage() {
@@ -258,7 +259,7 @@ export default function SettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Accent Color
               </label>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 items-center">
                 {ACCENT_COLORS.map((color) => (
                   <button
                     key={color.value}
@@ -272,12 +273,34 @@ export default function SettingsPage() {
                     className={`h-8 w-8 rounded-full border-2 transition ${
                       settings.accentColor === color.value
                         ? "border-gray-900 scale-110"
-                        : "border-transparent hover:scale-105"
+                        : color.value === "#ffffff" ? "border-gray-300 hover:scale-105" : "border-transparent hover:scale-105"
                     }`}
                     style={{ backgroundColor: color.value }}
                     title={color.label}
                   />
                 ))}
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <label className="text-xs text-gray-500">Custom:</label>
+                <div className="flex items-center gap-1.5 rounded-lg border border-gray-300 px-2 py-1">
+                  <div
+                    className="h-5 w-5 rounded-full border border-gray-200 shrink-0"
+                    style={{ backgroundColor: settings.accentColor }}
+                  />
+                  <input
+                    type="text"
+                    value={settings.accentColor}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val.match(/^#[0-9a-fA-F]{0,6}$/)) {
+                        setSettings((prev) => ({ ...prev, accentColor: val }));
+                      }
+                    }}
+                    className="w-20 text-sm font-mono outline-none"
+                    placeholder="#000000"
+                    maxLength={7}
+                  />
+                </div>
               </div>
             </div>
 

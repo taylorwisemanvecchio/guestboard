@@ -76,15 +76,17 @@ model Stay {
 }
 
 model Device {
-  id          String   @id @default(cuid())
-  propertyId  String
-  name        String   @default("TV")
-  deviceToken String   @unique @default(cuid())
-  lastSeen    DateTime @default(now())
-  status      String   @default("active") // active, revoked
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  propertyId     String
+  name           String    @default("TV")
+  deviceToken    String    @unique @default(cuid())
+  lastSeen       DateTime  @default(now())
+  status         String    @default("active") // active, revoked
+  pendingCommand String?   // "wipe_credentials", null when no pending command
+  commandIssuedAt DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  property       Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([propertyId])
   @@index([deviceToken])

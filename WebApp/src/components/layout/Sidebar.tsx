@@ -16,9 +16,9 @@ export function Sidebar({ properties, userName, userEmail }: SidebarProps) {
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
-      <div className="p-6 border-b border-gray-100">
-        <Link href="/dashboard" className="text-xl font-bold text-teal-600">
-          Guestboard
+      <div className="p-4 border-b border-gray-100 flex justify-center">
+        <Link href="/dashboard">
+          <img src="/logo.png" alt="Guestboard" className="h-20 w-auto" />
         </Link>
       </div>
 
